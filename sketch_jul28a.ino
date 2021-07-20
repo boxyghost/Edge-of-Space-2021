@@ -18,6 +18,7 @@ Adafruit_SGP30 sgp;
 #define BME_MISO 12
 #define BME_MOSI 11
 #define BME_CS 10
+#define RELAY_PIN 15
 
 #define SEALEVELPRESSURE_HPA (1013.25)
 
@@ -130,6 +131,7 @@ void setup() {
 
 
 int counter = 0;
+pinMode (RELAY_PIN, OUTPUT)
 void loop() {
   // If you have a temperature / humidity sensor, you can set the absolute humidity to enable the humditiy compensation for the air quality signals
   //float temperature = 22.1; // [°C]
@@ -178,5 +180,12 @@ void loop() {
   Serial.print(event.orientation.z, 4);
   Serial.println("");
   
-  delay(1000);
+  delay(200);
+  digitalWrite(RELAY_PIN, HIGH);//Trigger press 1 - take image
+  delay(200);
+  digitalWrite(RELAY_PIN, LOW);//Press 1 Release after delay
+  delay(400);
+  digitalWri;te(RELAY_PIN, HIGH)//Trigger Press 2, Save Image
+  delay(200)
+  digitalWrite(RELAY_PIN, LOW);//Press 2 Release after delay
 }
