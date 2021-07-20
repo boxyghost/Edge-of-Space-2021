@@ -23,8 +23,8 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+from dash.dependencies import Input, Output
 
-# import plotly
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
@@ -62,6 +62,9 @@ margin=dict(l=50, r=0, t=50, b=30)
 
 # x-axis of timestamps of datetime type
 x_time = df['TimeStamp'].apply(lambda row : parse_timestamp(row))
+x_time_labels = (x_time.astype({'TimeStamp': str})).to_dict()
+print(type(x_time_labels))
+print(x_time_labels)
 
 # Start dashboard
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -133,6 +136,16 @@ fig_3 = dcc.Graph(
     id='graph-3'
     )
 
+# Time Control Slider
+slider = dcc.Slider(
+        id='time-slider',
+        min=0,
+        max=len(x_time_labels),
+        marks=x_time_labels,
+        step=None
+    )
+
+
 # Populate dashboard
 app.layout = html.Div(children=[
     html.H1(children='Mission Control'),
@@ -142,13 +155,8 @@ app.layout = html.Div(children=[
     '''),
     # Graphs
     fig_1, fig_2, fig_3,
-
-    dcc.Slider(
-    min=-5,
-    max=10,
-    step=0.5,
-    value=-3
-    ),
+    # Time Slider
+    slider
 
     # html.Div(id='slider-output-container')
 ])
