@@ -7,7 +7,7 @@
 @bugs None yet!
 
 @TODO create basic dashboard, read in csv data files, display sensor data in charts, create 3D representation of flight data, display video
-    * Slider controls time represented by graphs
+    * Slider controls time represented by graphs with vertical line
     * Incorporate GPS
     * Incorporate video
     * Trace data in real-time
@@ -61,10 +61,10 @@ w_md = 800
 margin=dict(l=50, r=0, t=50, b=30)
 
 # x-axis of timestamps of datetime type
-x_time = df['TimeStamp'].apply(lambda row : parse_timestamp(row))
+df['TimeStamp'] = df['TimeStamp'].apply(lambda row : parse_timestamp(row))
+x_time = df['TimeStamp']
+
 x_time_labels = (x_time.astype({'TimeStamp': str})).to_dict()
-print(type(x_time_labels))
-print(x_time_labels)
 
 # Start dashboard
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -145,29 +145,79 @@ slider = dcc.Slider(
         step=None
     )
 
-
 # Populate dashboard
-app.layout = html.Div(children=[
-    html.H1(children='Mission Control'),
+app.layout = html.Div(id='layout', children=[
+    html.H1(id='title', children='Mission Control'),
 
-    html.Div(children='''
+    html.Div(id='subtitle', children='''
         Dashboard for Edge of Space Colorado Springs 2021
     '''),
+
     # Graphs
     fig_1, fig_2, fig_3,
-    # Time Slider
-    slider
 
-    # html.Div(id='slider-output-container')
+    # Time Slider
+    slider,
+
+    html.Div(id='my-output')
 ])
 
-# @app.callback(
-#     dash.dependencies.Output('slider-output-container', 'children'),
-#     [dash.dependencies.Input('my-slider', 'value')])
+@app.callback(
+    Output('my-output', 'children'),
+    [Input('time-slider', 'value')]
+)
 
+# def update_output_div(input_value):
+#     return 'Output: {}'.format(input_value)
 
-def update_output(value):
-    return 'You have selected "{}"'.format(value)
+def update_figure(idx):
+    dff = df
+    filtered_x = x_time
+    filtered_y = df['eCO2']
+    if idx is None:
+        return html.Div(dcc.Graph(
+            figure=dict(
+                data=[
+                    dict(
+                        x=filtered_x,
+                        y=filtered_y,
+                        name='2. test-graph',
+                        marker=dict(
+                            color='rgb(55, 83, 109)'
+                        )
+                    )
+                ],
+                layout=dict(
+                    title='TESTING',
+                    margin=margin
+                )
+            ),
+            style={'height': h_sm, 'width': w_sm},
+        ))
+    else:
+        filtered_x = x_time.head(idx)
+        filtered_y = df['eCO2'].head(idx)
+        return html.Div(dcc.Graph(
+            figure=dict(
+                data=[
+                    dict(
+                        x=filtered_x,
+                        y=filtered_y,
+                        name='2. test-graph',
+                        marker=dict(
+                            color='rgb(55, 83, 109)'
+                        )
+                    )
+                ],
+                layout=dict(
+                    title='TESTING',
+                    margin=margin
+                )
+            ),
+            style={'height': h_sm, 'width': w_sm},
+            id='test-graph'
+            )
+        )
 
 if __name__ == '__main__':
     app.run_server(debug=True)
