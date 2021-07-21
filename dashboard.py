@@ -7,11 +7,14 @@
 @bugs None yet!
 
 @TODO create basic dashboard, read in csv data files, display sensor data in charts, create 3D representation of flight data, display video
-    * Slider controls time represented by graphs
+    * Slider controls vertical line along graphs
+        * Show all data, If marker is after the slider value, reduce opacity and highlight with a line
     * Incorporate GPS
     * Incorporate video
     * Trace data in real-time
     * Add labels for key points
+    * Make the graphs the same size so they align vertically
+    * FIXME:Expand titles
 
 """
 
@@ -24,6 +27,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+from pandas.core.indexes import base
 
 import plotly.express as px
 import plotly.graph_objects as go
@@ -49,6 +53,7 @@ def parse_timestamp(timestamp):
 ############## Main ##############
 
 # Read data
+# df = pd.read_csv("Test_Data/newCoolTemp.csv")
 df = pd.read_csv("Test_Data/dummy.csv")
 
 # Link stylesheet
@@ -61,80 +66,83 @@ w_md = 800
 margin=dict(l=50, r=0, t=50, b=30)
 
 # x-axis of timestamps of datetime type
-x_time = df['TimeStamp'].apply(lambda row : parse_timestamp(row))
+df['TimeStamp'] = df['TimeStamp'].apply(lambda row : parse_timestamp(row))
+x_time = df['TimeStamp']
+
 x_time_labels = (x_time.astype({'TimeStamp': str})).to_dict()
-print(type(x_time_labels))
-print(x_time_labels)
 
 # Start dashboard
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-# Initialize graphs
-# Graph 1: Equivalent Calculated Carbon-Dioxide
-fig_1 = dcc.Graph(
-    figure=dict(
-        data=[
-            dict(
-                x=x_time,
-                y=df['eCO2'],
-                name='Equivalent Calculated Carbon-Dioxide (ppm)',
-                marker=dict(
-                    color='rgb(55, 83, 109)'
-                )
-            ),
-        ],
-        layout=dict(
-            title='Equivalent Calculated Carbon-Dioxide (ppm)',
-            margin=margin
-        )
-    ),
-    style={'height': h_sm, 'width': w_sm},
-    id='graph-1'
-    )
-
-# Graph 2: Total Volatile Organic Compounds
-fig_2 = dcc.Graph(
-    figure=dict(
-        data=[
-            dict(
-                x=x_time,
-                y=df['TVOC'],
-                name='Total Volatile Organic Compounds (ppb)',
-                marker=dict(
-                    color='rgb(55, 83, 109)'
-                )
+# Initialize figures
+base_figures = [
+    # Graph 1: Equivalent Calculated Carbon-Dioxide
+        dict(
+            data=[
+                dict(
+                    x=x_time,
+                    y=df['eCO2'],
+                    name='Equivalent Calculated Carbon-Dioxide (ppm)',
+                    marker=dict(
+                        color='rgb(55, 83, 109)'
+                    )
+                ),
+            ],
+            layout=dict(
+                title='Equivalent Calculated Carbon-Dioxide (ppm)',
+                margin=margin
             )
-        ],
-        layout=dict(
-            title='Total Volatile Organic Compounds (ppb)'
-        )
-    ),
-    style={'height': h_sm, 'width': w_sm},
-    id='graph-2'
-    )
+        ),
 
-# Graph 3: Temperature
-fig_3 = dcc.Graph(
-    figure=dict(
-        data=[
-            dict(
-                x=x_time,
-                y=df['Temperature'],
-                name='Temperature (ºF)',
-                marker=dict(
-                    color='rgb(55, 83, 109)'
+    # Graph 2: Total Volatile Organic Compounds
+    dict(
+            data=[
+                dict(
+                    x=x_time,
+                    y=df['TVOC'],
+                    name='Total Volatile Organic Compounds (ppb)',
+                    marker=dict(
+                        color='rgb(55, 83, 109)'
+                    )
                 )
+            ],
+            layout=dict(
+                title='Total Volatile Organic Compounds (ppb)'
             )
-        ],
-        layout=dict(
-            title='Temperature (ºF)',
-            showlegend=False,
-            margin=margin
+        ),
+
+    # Graph 3: Temperature
+    dict(
+            data=[
+                dict(
+                    x=x_time,
+                    y=df['Temperature'],
+                    name='Temperature (ºF)',
+                    marker=dict(
+                        color='rgb(55, 83, 109)'
+                    )
+                )
+            ],
+            layout=dict(
+                title='Temperature (ºF)',
+                showlegend=False,
+                margin=margin
+            )
         )
-    ),
-    style={'height': h_sm, 'width': w_sm},
-    id='graph-3'
-    )
+]
+
+# Wrap figures
+base_graphs = []
+i = 0
+for fig in base_figures:
+    base_graphs.append(
+            dcc.Graph(
+                figure=fig,
+                style={'height': h_sm, 'width': w_sm},
+                id='graph-' + str(i)
+            )
+        )
+    i = i + 1
 
 # Time Control Slider
 slider = dcc.Slider(
@@ -145,29 +153,71 @@ slider = dcc.Slider(
         step=None
     )
 
-
 # Populate dashboard
-app.layout = html.Div(children=[
-    html.H1(children='Mission Control'),
-
-    html.Div(children='''
-        Dashboard for Edge of Space Colorado Springs 2021
-    '''),
+app.layout = html.Div(id='layout', children=[
+    html.H1(id='title', children='Mission Control'),
+    html.Div(id='subtitle', children='''Dashboard for Edge of Space Colorado Springs 2021'''),
     # Graphs
-    fig_1, fig_2, fig_3,
+    html.Div(id='my-output'),
     # Time Slider
-    slider
-
-    # html.Div(id='slider-output-container')
+    slider,
 ])
 
-# @app.callback(
-#     dash.dependencies.Output('slider-output-container', 'children'),
-#     [dash.dependencies.Input('my-slider', 'value')])
+@app.callback(
+    Output('my-output', 'children'),
+    [Input('time-slider', 'value')]
+)
 
+def update_figure(idx):
+    if idx is None:
+        return html.Div(base_graphs)
+    else:
+        mod_figures = []
+        filter_x = x_time.head(idx)
+        for fig in base_figures:
+            figure_name = fig['data'][0]['y'].name
+            # Create new filter_y values
+            filter_y = df[figure_name].head(idx)
 
-def update_output(value):
-    return 'You have selected "{}"'.format(value)
+            # Create a new figure with modified x and y
+            mod_figure=dict(
+                data=[
+                    dict(
+                        x=filter_x,
+                        y=filter_y,
+                        name=figure_name,
+                        marker=dict(
+                            color='rgb(55, 83, 109)'
+                        )
+                    )
+                ],
+                layout=dict(
+                    title=figure_name,
+                    showlegend=False,
+                    margin=margin
+                )
+            )
+            mod_figures.append(mod_figure)
+
+        mod_graphs = []
+        i = 0
+        # Wrap figures
+        for fig in mod_figures:
+            mod_graphs.append(
+                    dcc.Graph(
+                        figure=fig,
+                        style={'height': h_sm, 'width': w_sm},
+                        id='graph-' + str(i)
+                    )
+                )
+            i = i + 1
+        
+        # mod_figures = base_figures
+        # modify figures to use a different range of data based on slider idx
+        # for (col_name, vals) in df.iteritems():
+        #     print(col_name)
+        # filtered_y = df['eCO2'].head(idx)
+        return html.Div(mod_graphs)
 
 if __name__ == '__main__':
     app.run_server(debug=True)
