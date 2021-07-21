@@ -17,9 +17,6 @@
     * FIXME:Expand titles
 
 """
-
-# -*- coding: utf-8 -*-
-
 # Run this app with `python dashboard.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 
@@ -57,7 +54,7 @@ def parse_timestamp(timestamp):
 df = pd.read_csv("Test_Data/dummy.csv")
 
 # Link stylesheet
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = ['style.css']
 h_sm = 400
 w_sm = 600
 h_md = 650
@@ -73,6 +70,7 @@ x_time_labels = (x_time.astype({'TimeStamp': str})).to_dict()
 
 # Start dashboard
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+# app = dash.Dash(__name__)
 
 # Initialize figures
 base_figures = [
@@ -158,7 +156,7 @@ app.layout = html.Div(id='layout', children=[
     html.H1(id='title', children='Mission Control'),
     html.Div(id='subtitle', children='''Dashboard for Edge of Space Colorado Springs 2021'''),
     # Graphs
-    html.Div(id='my-output'),
+    html.Div(id='my-output', className="container"),
     # Time Slider
     slider,
 ])
@@ -207,16 +205,12 @@ def update_figure(idx):
                     dcc.Graph(
                         figure=fig,
                         style={'height': h_sm, 'width': w_sm},
-                        id='graph-' + str(i)
+                        id='graph-' + str(i),
+                        className='column'
                     )
                 )
             i = i + 1
         
-        # mod_figures = base_figures
-        # modify figures to use a different range of data based on slider idx
-        # for (col_name, vals) in df.iteritems():
-        #     print(col_name)
-        # filtered_y = df['eCO2'].head(idx)
         return html.Div(mod_graphs)
 
 if __name__ == '__main__':
