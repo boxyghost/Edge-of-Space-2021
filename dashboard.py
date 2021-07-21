@@ -7,11 +7,13 @@
 @bugs None yet!
 
 @TODO create basic dashboard, read in csv data files, display sensor data in charts, create 3D representation of flight data, display video
-    * Slider controls time represented by graphs with vertical line
+    * Slider controls vertical line along graphs
+        * Show all data, If marker is after the slider value, reduce opacity and highlight with a line
     * Incorporate GPS
     * Incorporate video
     * Trace data in real-time
     * Add labels for key points
+    * Make the graphs the same size so they align vertically
     * FIXME:Expand titles
 
 """
@@ -51,6 +53,7 @@ def parse_timestamp(timestamp):
 ############## Main ##############
 
 # Read data
+# df = pd.read_csv("Test_Data/newCoolTemp.csv")
 df = pd.read_csv("Test_Data/dummy.csv")
 
 # Link stylesheet
