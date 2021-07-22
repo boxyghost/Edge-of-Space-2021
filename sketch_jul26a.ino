@@ -1,3 +1,6 @@
+// Obsolete file
+// Arduino GPS is not being used as of 07/22/21
+
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
 #include <Wire.h>
