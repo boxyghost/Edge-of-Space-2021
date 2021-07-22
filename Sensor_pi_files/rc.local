@@ -1,7 +1,8 @@
 #!/bin/sh -e
 #
 # rc.local
-#
+# For Sensor Raspberry Pi
+# 
 # This script is executed at the end of each multiuser runlevel.
 # Make sure that the script will "exit 0" on success or any other
 # value on error.
@@ -18,7 +19,7 @@ if [ "$_IP" ]; then
 fi
 
 sleep 60
-python /home/pi/boot.py &
+python /home/pi/Edge-of-Space-2021/Sensor_pi_files/boot.py &
 
 exit 0
 "rc.local" [readonly] 23 lines, 898964 characters
