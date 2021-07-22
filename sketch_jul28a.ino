@@ -34,18 +34,18 @@ uint32_t getAbsoluteHumidity(float temperature, float humidity) {
 }
 
 void printValues() {
-    Serial.print(",Temperature,");
+    Serial.print(",");
     Serial.print(bme.readTemperature());
 
-    Serial.print(",Pressure,");
+    Serial.print(",");
 
     Serial.print(bme.readPressure() / 100.0F);
 
-    Serial.print(",Altitude,");
+    Serial.print(",");
     Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
     
 
-    Serial.print(",Humidity,");
+    Serial.print(",");
     Serial.print(bme.readHumidity());
 
 }
@@ -143,49 +143,47 @@ void loop() {
     return;
   }
 
-  Serial.print("TVOC,"); Serial.print(sgp.TVOC);
-  Serial.print(",eCO2,"); Serial.print(sgp.eCO2);
-
-  Serial.print(",H2"); Serial.print(sgp.rawH2);
-  Serial.print(",Ethanol,"); Serial.print(sgp.rawEthanol);
+  Serial.print(","); Serial.print(sgp.TVOC);
+  Serial.print(","); Serial.print(sgp.eCO2);
+  Serial.print(","); Serial.print(sgp.rawH2);
+  Serial.print(","); Serial.print(sgp.rawEthanol);
  
   printValues();
 
 
+  // This temperature sensor is not needed (doesn't work)
+  // // Serial.println("wake up MCP9808.... "); // wake up MCP9808 - power consumption ~200 mikro Ampere
+  // tempsensor.wake();   // wake up, ready to read!
 
-  // Serial.println("wake up MCP9808.... "); // wake up MCP9808 - power consumption ~200 mikro Ampere
-  tempsensor.wake();   // wake up, ready to read!
+  // // Read and print out the temperature, also shows the resolution mode used for reading.
+  // //Serial.print("Resolution in mode: ");
+  // //Serial.println (tempsensor.getResolution());
+  // float c = tempsensor.readTempC();
+  // float f = tempsensor.readTempF();
+  // Serial.print(",Temp,"); 
+  // Serial.print(c, 4);
+  // //Serial.println("Shutdown MCP9808.... ");
+  // tempsensor.shutdown_wake(1); // shutdown MSP9808 - power consumption ~0.1 mikro Ampere, stops temperature sampling
 
-  // Read and print out the temperature, also shows the resolution mode used for reading.
-  //Serial.print("Resolution in mode: ");
-  //Serial.println (tempsensor.getResolution());
-  float c = tempsensor.readTempC();
-  float f = tempsensor.readTempF();
-  Serial.print(",Temp,"); 
-  Serial.print(c, 4);
-  //Serial.println("Shutdown MCP9808.... ");
-  tempsensor.shutdown_wake(1); // shutdown MSP9808 - power consumption ~0.1 mikro Ampere, stops temperature sampling
-
-
-
-    sensors_event_t event; 
+  sensors_event_t event; 
   bno.getEvent(&event);
 
   /* Display the floating point data */
-  Serial.print(",X_Ori,");
+  Serial.print(",");
   Serial.print(event.orientation.x, 4);
-  Serial.print(",Y_Ori,");
+  Serial.print(",");
   Serial.print(event.orientation.y, 4);
-  Serial.print(",Z_Ori,");
+  Serial.print(",");
   Serial.print(event.orientation.z, 4);
   Serial.println("");
   
+  // Controls thermal camera
   delay(200);
   digitalWrite(RELAY_PIN, HIGH);//Trigger press 1 - take image
   delay(200);
   digitalWrite(RELAY_PIN, LOW);//Press 1 Release after delay
   delay(400);
-  digitalWri;te(RELAY_PIN, HIGH)//Trigger Press 2, Save Image
+  digitalWrite(RELAY_PIN, HIGH)//Trigger Press 2, Save Image
   delay(200)
   digitalWrite(RELAY_PIN, LOW);//Press 2 Release after delay
 }

@@ -27,6 +27,9 @@ while result is None:
 ser_0 = serial.Serial(arduino_port0, baud)
 print("Attempting to connect to Arduino with Port:  " + arduino_port0)
 
+with open(fileName, "a") as file_0:
+    # Print headers
+    file_0.write("TimeStamp,TVOC,eCO2,H2,Ethanol,Temperature,Pressure,Altitude,Humidity,X_Ori,Y_Ori,Z_Ori")
 
 while True:
 
