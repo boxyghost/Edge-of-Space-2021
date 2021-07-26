@@ -161,6 +161,9 @@ app.layout = html.Div(id='layout', children=[
     html.Div(id='my-output'),
     # Time Slider
     slider,
+    #Videos
+    html.Iframe(src="https://www.youtube.com/embed/kFr3kiLse5U")
+    #spot For Demeaus - html.Iframe(src="")
 ])
 
 @app.callback(
