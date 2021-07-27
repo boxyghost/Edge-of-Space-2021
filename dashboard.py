@@ -23,6 +23,7 @@
 # Run this app with `python dashboard.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 
+from ast import Div
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -157,19 +158,28 @@ slider = dcc.Slider(
     )
 
 # Populate dashboard
-app.layout = html.Div(id='layout', children=[
+# TODO: Make dashboard responsive. See style.css and container class
+app.layout = html.Div(id='layout', className='', children=[
     html.H1(id='title', children='Mission Control'),
     html.Div(id='subtitle', children='''Dashboard for Edge of Space Colorado Springs 2021'''),
-    # Videos
-    html.Div(id='row-1', children=[
-        html.Div(html.Iframe(src="https://www.youtube.com/embed/kFr3kiLse5U", className='div-video one-third column module')),
-        html.Div(html.Iframe(src="https://www.youtube.com/embed/ieX1vjXe5JE", className='div-video one-third column module'))
-        ]
+
+    
+    html.Div(id='row-1', className='row', children=[
+        # GoPro Side View
+        html.Div(className='one-third column module', children=[html.Iframe(src="https://www.youtube.com/embed/kFr3kiLse5U", className='video')]),
+        # TODO: Insert 3D Map
+        html.Div(className='one-third column module', children=[]),
+        # GoPro Bottom View
+        html.Div(className='one-third column module', children=[html.Iframe(src="https://www.youtube.com/embed/ieX1vjXe5JE", className='video')])]
     ),
+
     # Graphs
-    html.Div(id='row-2', children=[html.Div(id='graphs-output')]),
+    html.Div(id='row-2', className='row', children=[
+        html.Div(id='graphs-output')]
+    ),
+
     # Time Slider
-    slider
+    html.Div(children=[slider])
 ])
 
 @app.callback(
@@ -183,7 +193,7 @@ def update_figure(idx):
     if idx is None:
         return html.Div(base_objects)
     else:
-        mod_figures = []
+        mod_graphs = []
         filter_x = x_time.head(idx)
         for fig in base_graphs:
             figure_name = fig['data'][0]['y'].name
@@ -208,22 +218,24 @@ def update_figure(idx):
                     margin=margin
                 )
             )
-            mod_figures.append(mod_figure)
+            mod_graphs.append(mod_figure)
 
-        mod_graphs = []
+        mod_objects = []
         i = 0
         # Wrap figures
-        for fig in mod_figures:
-            mod_graphs.append(
+        for fig in mod_graphs:
+            mod_objects.append(
+                html.Div(id='div-graph-' + str(i), className="one-third column module", children=[
                     dcc.Graph(
                         figure=fig,
-                        
                         id='graph-' + str(i)
-                    )
+                    )]
                 )
+            )
             i = i + 1
+            
         
-        return html.Div(mod_graphs)
+        return html.Div(mod_objects)
 
 if __name__ == '__main__':
     app.run_server(debug=True)

@@ -39,18 +39,28 @@ Table of contents
 /* id
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 #layout {
-  display:grid;
+  display: block;
+  padding: 5px;
 }
 
 #time-slider {
+  margin-top: 125px;
+  display: block;
   width: 75%;
   margin-left: auto;
   margin-right: auto;
 }
 
+/* 
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.video {
+  height: 100%;
+  width: 100%;
+}
+
 /* Grid
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
-.container {
+.container { 
   /* display: flex; */
   position: relative;
   width: 100%;
@@ -63,6 +73,10 @@ Table of contents
   width: 100%;
   float: left;
   box-sizing: border-box; }
+
+.row {
+  height: 30.6666666667%;
+}
 
 /* For devices larger than 400px */
 @media (min-width: 400px) {
@@ -138,8 +152,9 @@ Table of contents
 /* Module
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 /* one block of the modular grid */
-module {
-  padding: 4%;
+.module {
+  padding: 8px;
+  height: 350px;
 }
 
 
