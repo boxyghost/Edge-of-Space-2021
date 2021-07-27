@@ -74,8 +74,8 @@ x_time_labels = (x_time.astype({'TimeStamp': str})).to_dict()
 # Start dashboard
 app = dash.Dash(__name__)
 
-# Initialize figures
-base_figures = [
+# Initialize graphs as simply data in dicitonary form, not as dash core components
+base_graphs = [
     # Graph 1: Equivalent Calculated Carbon-Dioxide
         dict(
             data=[
@@ -131,11 +131,13 @@ base_figures = [
         )
 ]
 
-# Wrap figures
-base_graphs = []
+# List to hold objects ready to be added to the dashboard
+base_objects = []
+
+# Wrap graph data in dash core component wrapper and add to list of objects (base_objects)
 i = 0
-for fig in base_figures:
-    base_graphs.append(
+for fig in base_graphs:
+    base_objects.append(
             dcc.Graph(
                 figure=fig,
                 style={'height': h_sm, 'width': w_sm},
@@ -161,9 +163,9 @@ app.layout = html.Div(id='layout', children=[
     html.Div(id='my-output'),
     # Time Slider
     slider,
-    #Videos
-    html.Iframe(src="https://www.youtube.com/embed/kFr3kiLse5U")
-    #spot For Demeaus - html.Iframe(src="")
+    # Videos
+    html.Iframe(src="https://www.youtube.com/embed/kFr3kiLse5U"),
+    html.Iframe(src="https://www.youtube.com/embed/ieX1vjXe5JE")
 ])
 
 @app.callback(
@@ -171,13 +173,15 @@ app.layout = html.Div(id='layout', children=[
     [Input('time-slider', 'value')]
 )
 
+# Dash calls this function internally to update the the callback my-output children when the time-slider value changes
+# idx is the value of the time slider
 def update_figure(idx):
     if idx is None:
-        return html.Div(base_graphs)
+        return html.Div(base_objects)
     else:
         mod_figures = []
         filter_x = x_time.head(idx)
-        for fig in base_figures:
+        for fig in base_graphs:
             figure_name = fig['data'][0]['y'].name
             # Create new filter_y values
             filter_y = df[figure_name].head(idx)
@@ -215,11 +219,6 @@ def update_figure(idx):
                 )
             i = i + 1
         
-        # mod_figures = base_figures
-        # modify figures to use a different range of data based on slider idx
-        # for (col_name, vals) in df.iteritems():
-        #     print(col_name)
-        # filtered_y = df['eCO2'].head(idx)
         return html.Div(mod_graphs)
 
 if __name__ == '__main__':
