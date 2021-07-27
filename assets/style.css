@@ -3,6 +3,7 @@ Based off of https://codepen.io/chriddyp/pen/bWLwgP.css
 
 Table of contents
 ––––––––––––––––––––––––––––––––––––––––––––––––––
+- Ids
 - Plotly.js
 - Grid
 - Base Styles
@@ -19,7 +20,7 @@ Table of contents
 - Media Queries
 */
 
-/* PLotly.js 
+/* Plotly.js 
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 /* plotly.js's modebar's z-index is 1001 by default
  * https://github.com/plotly/plotly.js/blob/7e4d8ab164258f6bd48be56589dacd9bdd7fded2/src/css/_modebar.scss#L5
@@ -35,11 +36,22 @@ Table of contents
     z-index: 1002;
 }*/
 
+/* id
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+#layout {
+  display:grid;
+}
+
+#time-slider {
+  width: 75%;
+  margin-left: auto;
+  margin-right: auto;
+}
 
 /* Grid
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 .container {
-  display: flex;
+  /* display: flex; */
   position: relative;
   width: 100%;
   max-width: 960px;
@@ -63,7 +75,6 @@ Table of contents
 @media (min-width: 550px) {
   .container {
     width: 80%; }
-  .column,
   .columns {
     margin-left: 4%; }
   .column:first-child,
@@ -121,6 +132,14 @@ Table of contents
   .offset-by-one-half.column,
   .offset-by-one-half.columns     { margin-left: 52%; }
 
+}
+
+
+/* Module
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+/* one block of the modular grid */
+module {
+  padding: 4%;
 }
 
 

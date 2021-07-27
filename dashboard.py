@@ -58,11 +58,6 @@ df = pd.read_csv("Test_Data/dummy.csv")
 
 # Stylesheets in assests folder are automatically linked
 
-h_sm = 400
-w_sm = 600
-h_md = 650
-w_md = 800
-
 margin=dict(l=50, r=0, t=50, b=30)
 
 # x-axis of timestamps of datetime type
@@ -90,6 +85,7 @@ base_graphs = [
             ],
             layout=dict(
                 title='Equivalent Calculated Carbon-Dioxide (ppm)',
+                showlegend=False,
                 margin=margin
             )
         ),
@@ -107,7 +103,9 @@ base_graphs = [
                 )
             ],
             layout=dict(
-                title='Total Volatile Organic Compounds (ppb)'
+                title='Total Volatile Organic Compounds (ppb)',
+                showlegend=False,
+                margin=margin
             )
         ),
 
@@ -138,12 +136,13 @@ base_objects = []
 i = 0
 for fig in base_graphs:
     base_objects.append(
+        html.Div(id='div-graph-' + str(i), className="one-third column module", children=[
             dcc.Graph(
                 figure=fig,
-                style={'height': h_sm, 'width': w_sm},
-                id='graph-' + str(i),
-            )
+                id='graph-' + str(i))
+            ]
         )
+    )
     i = i + 1
 
 # Time Control Slider
@@ -151,29 +150,34 @@ slider = dcc.Slider(
         id='time-slider',
         min=0,
         max=len(x_time_labels),
-        marks=x_time_labels,
-        step=None
+        #TODO: Mark key events like launch time, balloon burst time, point of contact
+        #TODO: Format markings, perhaps truncate timestamp to only include time or make the slider vertical
+        marks=x_time_labels, 
+        step=None,
     )
 
 # Populate dashboard
 app.layout = html.Div(id='layout', children=[
     html.H1(id='title', children='Mission Control'),
     html.Div(id='subtitle', children='''Dashboard for Edge of Space Colorado Springs 2021'''),
-    # Graphs
-    html.Div(id='my-output'),
-    # Time Slider
-    slider,
     # Videos
-    html.Iframe(src="https://www.youtube.com/embed/kFr3kiLse5U"),
-    html.Iframe(src="https://www.youtube.com/embed/ieX1vjXe5JE")
+    html.Div(id='row-1', children=[
+        html.Div(html.Iframe(src="https://www.youtube.com/embed/kFr3kiLse5U", className='div-video one-third column module')),
+        html.Div(html.Iframe(src="https://www.youtube.com/embed/ieX1vjXe5JE", className='div-video one-third column module'))
+        ]
+    ),
+    # Graphs
+    html.Div(id='row-2', children=[html.Div(id='graphs-output')]),
+    # Time Slider
+    slider
 ])
 
 @app.callback(
-    Output('my-output', 'children'),
+    Output('graphs-output', 'children'),
     [Input('time-slider', 'value')]
 )
 
-# Dash calls this function internally to update the the callback my-output children when the time-slider value changes
+# Dash calls this function internally to update the the callback graphs-output children when the time-slider value changes
 # idx is the value of the time slider
 def update_figure(idx):
     if idx is None:
@@ -213,7 +217,7 @@ def update_figure(idx):
             mod_graphs.append(
                     dcc.Graph(
                         figure=fig,
-                        style={'height': h_sm, 'width': w_sm},
+                        
                         id='graph-' + str(i)
                     )
                 )
