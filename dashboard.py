@@ -56,8 +56,8 @@ def parse_timestamp(timestamp):
 # df = pd.read_csv("Test_Data/newCoolTemp.csv")
 df = pd.read_csv("Test_Data/dummy.csv")
 
-# Link stylesheet
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+# Stylesheets in assests folder are automatically linked
+
 h_sm = 400
 w_sm = 600
 h_md = 650
@@ -72,7 +72,7 @@ x_time = df['TimeStamp']
 x_time_labels = (x_time.astype({'TimeStamp': str})).to_dict()
 
 # Start dashboard
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__)
 
 # Initialize figures
 base_figures = [
@@ -139,7 +139,7 @@ for fig in base_figures:
             dcc.Graph(
                 figure=fig,
                 style={'height': h_sm, 'width': w_sm},
-                id='graph-' + str(i)
+                id='graph-' + str(i),
             )
         )
     i = i + 1
