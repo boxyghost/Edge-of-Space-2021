@@ -33,6 +33,7 @@ from pandas.core.indexes import base
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
+import numpy as np
 import datetime
 
 ############# Helpers #############
@@ -67,6 +68,42 @@ x_time = df['TimeStamp']
 
 x_time_labels = (x_time.astype({'TimeStamp': str})).to_dict()
 
+#######################################
+
+# Making a 'continuous' list of values between the start and stop time
+# Pass time in as elements
+startTime = pd.Timestamp(2021, 7, 24, 8, 8, 10) # Made-up start time at 08:08:10
+endTime = pd.Timestamp(2021, 7, 24, 12, 34, 45) # Made-up end time at 12:34:45
+# Specify number of points
+t = np.linspace(startTime.value, endTime.value, 100)
+# Converts array to datetime objects
+# t = pd.to_datetime(t)
+
+# # Discrete x and y
+# x_test = pd.to_datetime(x_time)
+# y = df['Temperature']
+
+# # Fit a line to y
+# z = np.polyfit(np.arange(0,len(x_test)), y, 3)
+# f = np.poly1d(z)
+
+# # 'Continuous' y
+# y_new = f(t)
+
+# # Example data (a circle).
+# resolution = 20
+# t = np.linspace(0, np.pi * 2, resolution)
+y = np.sin(t)
+
+# # Example app.
+# figure = dict(data=[{'x': [], 'y': []}], layout=dict(xaxis=dict(range=[-1, 1]), yaxis=dict(range=[-1, 1])))
+# app = dash.Dash(__name__, update_title=None)  # remove "Updating..." from title
+# app.layout = html.Div([dcc.Graph(id='graph', figure=figure), dcc.Interval(id="interval")])
+
+##########################
+
+
+
 # Start dashboard
 app = dash.Dash(__name__)
 
@@ -92,43 +129,62 @@ base_graphs = [
         ),
 
     # Graph 2: Total Volatile Organic Compounds
-    dict(
-            data=[
-                dict(
-                    x=x_time,
-                    y=df['TVOC'],
-                    name='Total Volatile Organic Compounds (ppb)',
-                    marker=dict(
-                        color='rgb(55, 83, 109)'
-                    )
-                )
-            ],
-            layout=dict(
-                title='Total Volatile Organic Compounds (ppb)',
-                showlegend=False,
-                margin=margin
-            )
-        ),
+    # dict(
+    #         data=[
+    #             dict(
+    #                 x=x_time,
+    #                 y=df['TVOC'],
+    #                 name='Total Volatile Organic Compounds (ppb)',
+    #                 marker=dict(
+    #                     color='rgb(55, 83, 109)'
+    #                 )
+    #             )
+    #         ],
+    #         layout=dict(
+    #             title='Total Volatile Organic Compounds (ppb)',
+    #             showlegend=False,
+    #             margin=margin
+    #         )
+    #     ),
 
     # Graph 3: Temperature
-    dict(
+    # dict(
+    #         data=[
+    #             dict(
+    #                 x=x_time,
+    #                 y=df['Temperature'],
+    #                 name='Temperature (ºF)',
+    #                 marker=dict(
+    #                     color='rgb(55, 83, 109)'
+    #                 )
+    #             )
+    #         ],
+    #         layout=dict(
+    #             title='Temperature (ºF)',
+    #             showlegend=False,
+    #             margin=margin
+    #         )
+    #     )
+]
+
+test_fig = dict(
             data=[
                 dict(
-                    x=x_time,
-                    y=df['Temperature'],
-                    name='Temperature (ºF)',
+                    x=t,
+                    y=y,
+                    name='Test',
+                    mode='line',
                     marker=dict(
                         color='rgb(55, 83, 109)'
                     )
                 )
             ],
             layout=dict(
-                title='Temperature (ºF)',
+                title='Test',
                 showlegend=False,
                 margin=margin
             )
         )
-]
 
 # List to hold objects ready to be added to the dashboard
 base_objects = []
@@ -178,15 +234,23 @@ app.layout = html.Div(id='layout', className='', children=[
         html.Div(id='graphs-output')]
     ),
 
+    html.Div(children=[
+        dcc.Graph(figure=test_fig)
+    ]),
+
     # Time Slider
     html.Div(children=[slider])
 ])
+# @app.callback(
+#     Output(),
+#     [Input()]
+# )
 
-@app.callback(
-    Output('graphs-output', 'children'),
-    [Input('time-slider', 'value')]
-)
 
+# @app.callback(
+#     Output('graphs-output', 'children'),
+#     [Input('time-slider', 'value')]
+# )
 # Dash calls this function internally to update the the callback graphs-output children when the time-slider value changes
 # idx is the value of the time slider
 def update_figure(idx):
@@ -233,8 +297,6 @@ def update_figure(idx):
                 )
             )
             i = i + 1
-            
-        
         return html.Div(mod_objects)
 
 if __name__ == '__main__':

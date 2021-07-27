@@ -1,4 +1,4 @@
-TimeStamp,TVOC,eCO2,H20,Ethanol,Temperature,Pressure,Altitude,Humidity,X_Ori,Y_Ori,Z_Ori
+TimeStamp,TVOC,eCO2,H2,0,Ethanol,Temperature,Pressure,Altitude,Humidity,X_Ori,Y_Ori,Z_Ori
 2020-07-28-16_29_16,1,409,0,0,29.33,817.58,1773.64,35.56,0.0000,-1.7500,1.5125
 2020-07-28-16_29_17,2,509,0,0,29.36,818.58,1773.64,35.56,0.0000,-1.7500,1.5325
 2020-07-28-16_29_18,3,609,0,0,29.39,819.58,1773.64,35.56,0.0000,-1.7500,2.5425
