@@ -25,7 +25,7 @@ from click import style
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output, ALL
+from dash.dependencies import Input, Output, MATCH, ALL
 from matplotlib.pyplot import legend
 from pandas.core.indexes import base
 
@@ -68,7 +68,7 @@ def make_dropdown_left (idx):
 def make_dropdown_right (idx):
     drop = html.Div(
         children=[dcc.Dropdown(
-            id={'type': 'dropdowns','index': idx + 1},
+            id={'type': 'dropdowns','index': idx},
             options=options,
             placeholder="Select a dataset"
         )],
@@ -76,8 +76,10 @@ def make_dropdown_right (idx):
         style={'float':'right'}
     )
     return drop
+
 ############## Main ##############
-serial = 1
+
+serial = 0 # For giving each dropdown a unique index
 
 # Read data
 df = pd.read_csv("Test_Data/dummy.csv")
@@ -317,18 +319,20 @@ base_objects = []
 i = 0
 for fig in base_graphs:
     base_objects.append(
-        html.Div(id='div-graph-' + str(i), className="one-third column module", children=[
+        html.Div(
+            className="one-third column module", children=[
             html.Div(className='dropdowns', children=[
                 make_dropdown_left(serial),
-                make_dropdown_right(serial)
+                make_dropdown_right(serial + 1)
             ]),
             dcc.Graph(
                 figure=fig,
-                id='graph-' + str(i))
+                id={'type': 'dynamic-graphs', 'index': i} 
+                )
             ]
         )
     )
-    serial += 1
+    serial += 2
     i += 1
 
 # Time Control Slider
@@ -370,20 +374,21 @@ app.layout = html.Div(id='layout', style={"background-image": "url('assets/EOS.j
 ])
 
 @app.callback(
-    Output('test-output', 'children'),
-    Input({'type': 'dropdowns', 'index': ALL}, 'value')
+    Output({'type': 'dynamic-graphs', 'index': MATCH}, 'className'),
+    [Input({'type': 'dropdowns', 'index': MATCH}, 'value')],
+    prevent_initial_callback=True
 )
-def update_dropdown(option):
-    return option
+def update_y(val):
+    return val
+
 
 @app.callback(
     Output('graphs-output', 'children'),
     [Input('time-slider', 'value')]
 )
-
 # Dash calls this function internally to update the the callback graphs-output children when the time-slider value changes
 # idx is the value of the time slider
-def update_figure(idx):
+def update_graphs(idx):
     if idx is None:
         return html.Div(base_objects)
     else:
@@ -452,10 +457,11 @@ def update_figure(idx):
         # Wrap figures
         for fig in mod_graphs:
             mod_objects.append(
-                html.Div(id='div-graph-' + str(i), className="one-third column module", children=[
+                html.Div(
+                    className="one-third column module", children=[
                     dcc.Graph(
                         figure=fig,
-                        id='graph-' + str(i)
+                        id={'type': 'dynamic-graphs', 'index': i},
                     )]
                 )
             )
