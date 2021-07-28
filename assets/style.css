@@ -38,9 +38,15 @@ Table of contents
 
 /* id
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
+#header-text {
+  background-color: white;
+  color: rgb(23, 35, 68);
+  text-align: center;
+  opacity: 75%;
+}
+
 #layout {
   display: block;
-  padding: 5px;
 }
 
 #time-slider {
