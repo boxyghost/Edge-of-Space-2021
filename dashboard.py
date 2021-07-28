@@ -68,9 +68,12 @@ df['TimeStamp'] = df['TimeStamp'].apply(lambda row : parse_timestamp(row))
 
 # 
 x_time = df['TimeStamp']
+print(x_time.min())
+print(x_time.min() - datetime.timedelta(minutes=1))
 
 # Discrete x needs to be a certain type for curve-fitting
 x_num = mdates.date2num(x_time)
+
 
 x_time_labels = (x_time.astype({'TimeStamp': str})).to_dict()
 
@@ -165,6 +168,9 @@ base_graphs = [
                 margin=margin,
                 legend=dict(
                     orientation="h"
+                ),
+                xaxis=dict(
+                    range=[x_time.min() - datetime.timedelta(minutes=10), x_time.max() + datetime.timedelta(minutes=10)]
                 )
             )
         ),
@@ -213,6 +219,9 @@ base_graphs = [
                 margin=margin,
                 legend=dict(
                     orientation="h"
+                ),
+                xaxis=dict(
+                    range=[x_time.min() - datetime.timedelta(minutes=10), x_time.max() + datetime.timedelta(minutes=10)]
                 )
             )
         ),
@@ -261,6 +270,9 @@ base_graphs = [
                 margin=margin,
                 legend=dict(
                     orientation="h"
+                ),
+                xaxis=dict(
+                    range=[x_time.min() - datetime.timedelta(minutes=10), x_time.max() + datetime.timedelta(minutes=10)]
                 )
             )
         )
@@ -379,6 +391,9 @@ def update_figure(idx):
                     margin=margin,
                     legend=dict(
                         orientation="h"
+                    ),
+                    xaxis=dict(
+                        range=[x_time.min() - datetime.timedelta(minutes=10), x_time.max() + datetime.timedelta(minutes=10)]
                     )
                 )
             )
