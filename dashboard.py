@@ -13,7 +13,7 @@
     * Incorporate video
     * Trace data in real-time
     * Add labels for key points
-    * Make the graphs the same size so they align vertically
+    * Make the graphs the same siz_temperaturee so they align vertically
     * FIXME:Expand titles
 
 """
@@ -23,11 +23,11 @@
 # Run this app with `python dashboard.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 
-from ast import Div
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+from matplotlib.pyplot import legend
 from pandas.core.indexes import base
 
 import plotly.express as px
@@ -65,36 +65,45 @@ margin=dict(l=50, r=0, t=50, b=30)
 
 # x-axis of timestamps of datetime type
 df['TimeStamp'] = df['TimeStamp'].apply(lambda row : parse_timestamp(row))
+
+# 
 x_time = df['TimeStamp']
+
+# Discrete x needs to be a certain type for curve-fitting
+x_num = mdates.date2num(x_time)
 
 x_time_labels = (x_time.astype({'TimeStamp': str})).to_dict()
 
 #######################################
 
-# Making a 'continuous' list of values between the start and stop time
-# startTime = pd.Timestamp(2021, 7, 24, 8, 8, 10) # Made-up start time at 08:08:10
-# endTime = pd.Timestamp(2021, 7, 24, 12, 34, 45) # Made-up end time at 12:34:45
-# Specify number of points
-# t = np.linspace(startTime.value, endTime.value, 100)
-# Converts array to datetime objects
-# t = pd.to_datetime(t)
-
-# Discrete x needs to be a certain type for curve-fitting
-x_num = mdates.date2num(x_time)
+# Initial curve-fitting
+# Default Data 1: Temperature
 # Discrete y
-y = df['Temperature']
+y_temperature = df['Temperature']
 
 # Fit a line to discrete x and y
-z = np.polyfit(x_num, y, 3)
-f = np.poly1d(z)
+z_temperature = np.polyfit(x_num, y_temperature, 3)
+f_temperature = np.poly1d(z_temperature)
 
 # 'Continuous' x
 xx = np.linspace(x_num.min(), x_num.max(), 100)
 xx_date = mdates.num2date(xx)
 
-# # 'Continuous' y
-yy = f(xx)
+# 'Continuous' y
+yy_temperature = f_temperature(xx)
 
+# Default Data 2: Humidity
+# Discrete y
+y_humidity = df['Humidity']
+
+# Fit a line to discrete x and y
+z_humidity = np.polyfit(x_num, y_humidity, 3)
+f_humidity = np.poly1d(z_humidity)
+
+# 'Continuous' y
+yy_humidity = f_humidity(xx)
+
+# Example of autoplay
 # # Example data (a circle).
 # resolution = 20
 # t = np.linspace(0, np.pi * 2, resolution)
@@ -107,95 +116,155 @@ yy = f(xx)
 
 ##########################
 
-
-
 # Start dashboard
 app = dash.Dash(__name__)
 
-# Initialize graphs as simply data in dicitonary form, not as dash core components
+# Initializ_temperaturee graphs as simply data in dicitonary form, not as dash core components
 base_graphs = [
-    # Graph 1: Equivalent Calculated Carbon-Dioxide
+    # Graph 1
         dict(
             data=[
                 dict(
-                    x=x_time,
-                    y=df['eCO2'],
-                    name='Equivalent Calculated Carbon-Dioxide (ppm)',
-                    marker=dict(
-                        color='rgb(55, 83, 109)'
-                    )
-                ),
-            ],
-            layout=dict(
-                title='Equivalent Calculated Carbon-Dioxide (ppm)',
-                showlegend=False,
-                margin=margin
-            )
-        ),
-
-    # Graph 2: Total Volatile Organic Compounds
-    dict(
-            data=[
-                dict(
-                    x=x_time,
-                    y=df['TVOC'],
-                    name='Total Volatile Organic Compounds (ppb)',
-                    marker=dict(
-                        color='rgb(55, 83, 109)'
-                    )
-                )
-            ],
-            layout=dict(
-                title='Total Volatile Organic Compounds (ppb)',
-                showlegend=False,
-                margin=margin
-            )
-        ),
-
-    # Graph 3: Temperature
-    # dict(
-    #         data=[
-    #             dict(
-    #                 x=x_time,
-    #                 y=df['Temperature'],
-    #                 name='Temperature (ºF)',
-    #                 marker=dict(
-    #                     color='rgb(55, 83, 109)'
-    #                 )
-    #             )
-    #         ],
-    #         layout=dict(
-    #             title='Temperature (ºF)',
-    #             showlegend=False,
-    #             margin=margin
-    #         )
-    #     )
-]
-
-test_fig = dict(
-            data=[
-                dict(
                     x=xx_date,
-                    y=yy,
-                    name='Fitted',
+                    y=yy_temperature,
+                    name='Fitted Temperature',
                     marker=dict(
-                        color='rgb(55, 83, 109)'
+                        color='rgb(25, 103, 109)'
                     )
                 ), 
                 dict(
                     x=x_time,
-                    y=y,
-                    name='Actual',
+                    y=y_temperature,
+                    name='Actual Temperature',
+                    marker=dict(
+                        color='rgb(25, 103, 109)'
+                    ),
+                    mode='markers'
+                ),
+                dict(
+                    x=xx_date,
+                    y=yy_humidity,
+                    name='Fitted Humidity',
                     marker=dict(
                         color='rgb(25, 103, 109)'
                     )
+                ), 
+                dict(
+                    x=x_time,
+                    y=y_humidity,
+                    name='Actual Humidity',
+                    marker=dict(
+                        color='rgb(25, 103, 109)'
+                    ),
+                    mode='markers'
                 )
+
             ],
             layout=dict(
-                title='Test',
-                margin=margin
+                title='Test 1',
+                margin=margin,
+                legend=dict(
+                    orientation="h"
+                )
+            )
+        ),
+
+    # Graph 2
+    dict(
+            data=[
+                dict(
+                    x=xx_date,
+                    y=yy_temperature,
+                    name='Fitted Temperature',
+                    marker=dict(
+                        color='rgb(25, 103, 109)'
+                    )
+                ), 
+                dict(
+                    x=x_time,
+                    y=y_temperature,
+                    name='Actual Temperature',
+                    marker=dict(
+                        color='rgb(25, 103, 109)'
+                    ),
+                    mode='markers'
+                ),
+                dict(
+                    x=xx_date,
+                    y=yy_humidity,
+                    name='Fitted Humidity',
+                    marker=dict(
+                        color='rgb(25, 103, 109)'
+                    )
+                ), 
+                dict(
+                    x=x_time,
+                    y=y_humidity,
+                    name='Actual Humidity',
+                    marker=dict(
+                        color='rgb(25, 103, 109)'
+                    ),
+                    mode='markers'
+                )
+
+            ],
+            layout=dict(
+                title='Test 2',
+                margin=margin,
+                legend=dict(
+                    orientation="h"
+                )
+            )
+        ),
+
+    # Graph 3
+    dict(
+            data=[
+                dict(
+                    x=xx_date,
+                    y=yy_temperature,
+                    name='Fitted Temperature',
+                    marker=dict(
+                        color='rgb(25, 103, 109)'
+                    )
+                ), 
+                dict(
+                    x=x_time,
+                    y=y_temperature,
+                    name='Actual Temperature',
+                    marker=dict(
+                        color='rgb(25, 103, 109)'
+                    ),
+                    mode='markers'
+                ),
+                dict(
+                    x=xx_date,
+                    y=yy_humidity,
+                    name='Fitted Humidity',
+                    marker=dict(
+                        color='rgb(25, 103, 109)'
+                    )
+                ), 
+                dict(
+                    x=x_time,
+                    y=y_humidity,
+                    name='Actual Humidity',
+                    marker=dict(
+                        color='rgb(25, 103, 109)'
+                    ),
+                    mode='markers'
+                )
+
+            ],
+            layout=dict(
+                title='Test 3',
+                margin=margin,
+                legend=dict(
+                    orientation="h"
+                )
             )
         )
+]
 
 # List to hold objects ready to be added to the dashboard
 base_objects = []
@@ -230,7 +299,6 @@ app.layout = html.Div(id='layout', className='', children=[
     html.H1(id='title', children='Mission Control'),
     html.Div(id='subtitle', children='''Dashboard for Edge of Space Colorado Springs 2021'''),
 
-    
     html.Div(id='row-1', className='row', children=[
         # GoPro Side View
         html.Div(className='one-third column module', children=[html.Iframe(src="https://www.youtube.com/embed/kFr3kiLse5U", className='video')]),
@@ -245,23 +313,14 @@ app.layout = html.Div(id='layout', className='', children=[
         html.Div(id='graphs-output')]
     ),
 
-    html.Div(children=[
-        dcc.Graph(figure=test_fig)
-    ]),
-
     # Time Slider
     html.Div(children=[slider])
 ])
-# @app.callback(
-#     Output(),
-#     [Input()]
-# )
 
-
-# @app.callback(
-#     Output('graphs-output', 'children'),
-#     [Input('time-slider', 'value')]
-# )
+@app.callback(
+    Output('graphs-output', 'children'),
+    [Input('time-slider', 'value')]
+)
 # Dash calls this function internally to update the the callback graphs-output children when the time-slider value changes
 # idx is the value of the time slider
 def update_figure(idx):
@@ -269,28 +328,58 @@ def update_figure(idx):
         return html.Div(base_objects)
     else:
         mod_graphs = []
-        filter_x = x_time.head(idx)
+        # filter_x = x_time.head(idx)
+        # TODO: Change this from a for-loop to be dependent dropdowns
+        # TODO: Display two y-axis for each selected dataset
         for fig in base_graphs:
-            figure_name = fig['data'][0]['y'].name
+            # figure_name = fig['data'][0]['y'].name
             # Create new filter_y values
-            filter_y = df[figure_name].head(idx)
+            # filter_y = df[figure_name].head(idx)
 
             # Create a new figure with modified x and y
             mod_figure=dict(
                 data=[
                     dict(
-                        x=filter_x,
-                        y=filter_y,
-                        name=figure_name,
+                        x=xx_date,
+                        y=yy_temperature,
+                        name='Fitted Temperature',
                         marker=dict(
-                            color='rgb(55, 83, 109)'
+                            color='rgb(25, 103, 109)'
                         )
+                    ), 
+                    dict(
+                        x=x_time,
+                        y=y_temperature,
+                        name='Actual Temperature',
+                        marker=dict(
+                            color='rgb(25, 103, 109)'
+                        ),
+                        mode='markers'
+                    ),
+                    dict(
+                        x=xx_date,
+                        y=yy_humidity,
+                        name='Fitted Humidity',
+                        marker=dict(
+                            color='rgb(25, 103, 109)'
+                        )
+                    ), 
+                    dict(
+                        x=x_time,
+                        y=y_humidity,
+                        name='Actual Humidity',
+                        marker=dict(
+                            color='rgb(25, 103, 109)'
+                        ),
+                        mode='markers'
                     )
                 ],
                 layout=dict(
-                    title=figure_name,
-                    showlegend=False,
-                    margin=margin
+                    title=str(idx),
+                    margin=margin,
+                    legend=dict(
+                        orientation="h"
+                    )
                 )
             )
             mod_graphs.append(mod_figure)
