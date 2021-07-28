@@ -7,14 +7,12 @@
 @bugs None yet!
 
 @TODO create basic dashboard, read in csv data files, display sensor data in charts, create 3D representation of flight data, display video
+    * Dropdown allows you to select data to compare
     * Slider controls vertical line along graphs
-        * Show all data, If marker is after the slider value, reduce opacity and highlight with a line
+        * Show all data, If marker is after the slider value, reduce opacity and highlight with a line https://plotly.com/python/horizontal-vertical-shapes/
     * Incorporate GPS
-    * Incorporate video
     * Trace data in real-time
     * Add labels for key points
-    * Make the graphs the same siz_temperaturee so they align vertically
-    * FIXME:Expand titles
 
 """
 
@@ -30,8 +28,8 @@ from dash.dependencies import Input, Output
 from matplotlib.pyplot import legend
 from pandas.core.indexes import base
 
-import plotly.express as px
-import plotly.graph_objects as go
+# import plotly.express as px
+# import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 import matplotlib.dates as mdates
@@ -59,6 +57,9 @@ def parse_timestamp(timestamp):
 # Read data
 df = pd.read_csv("Test_Data/dummy.csv")
 
+headers = list(df.columns.values)
+headers.pop(0) # Removes TimeStamp column
+
 # Stylesheets in assets folder are automatically linked
 
 margin=dict(l=50, r=0, t=50, b=30)
@@ -68,16 +69,12 @@ df['TimeStamp'] = df['TimeStamp'].apply(lambda row : parse_timestamp(row))
 
 # 
 x_time = df['TimeStamp']
-print(x_time.min())
-print(x_time.min() - datetime.timedelta(minutes=1))
 
 # Discrete x needs to be a certain type for curve-fitting
 x_num = mdates.date2num(x_time)
 
 
 x_time_labels = (x_time.astype({'TimeStamp': str})).to_dict()
-
-#######################################
 
 # Initial curve-fitting
 # Default Data 1: Temperature
@@ -106,6 +103,8 @@ f_humidity = np.poly1d(z_humidity)
 # 'Continuous' y
 yy_humidity = f_humidity(xx)
 
+#######################################
+
 # Example of autoplay
 # # Example data (a circle).
 # resolution = 20
@@ -122,7 +121,7 @@ yy_humidity = f_humidity(xx)
 # Start dashboard
 app = dash.Dash(__name__)
 
-# Initializ_temperaturee graphs as simply data in dicitonary form, not as dash core components
+# Initialize graphs as simply data in dictionary form, not as dash core components
 base_graphs = [
     # Graph 1
         dict(
@@ -305,6 +304,21 @@ slider = dcc.Slider(
         step=None,
     )
 
+# Preparing values for the dropdown based on data in the csv
+options = []
+for header in headers:
+    item = dict(
+        label=header,
+        value=header,
+    )
+    options.append(item)
+
+dropdown = dcc.Dropdown(
+    id='dropdown-1',
+    options=options,
+    placeholder="Select a dataset"
+)
+
 # Populate dashboard
 # TODO: Make dashboard responsive. See style.css and container class
 app.layout = html.Div(id='layout', className='', children=[
@@ -319,6 +333,10 @@ app.layout = html.Div(id='layout', className='', children=[
         # GoPro Bottom View
         html.Div(className='one-third column module', children=[html.Iframe(src="https://www.youtube.com/embed/ieX1vjXe5JE", className='video')])]
     ),
+
+    html.Div(id='div-dropdown', children=[
+        dropdown
+    ]),
 
     # Graphs
     html.Div(id='row-2', className='row', children=[
