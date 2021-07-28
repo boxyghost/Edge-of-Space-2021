@@ -345,7 +345,7 @@ slider = dcc.Slider(
 
 # Populate dashboard
 # TODO: Make dashboard responsive. See style.css and container class
-app.layout = html.Div(id='layout', style={"background-image": "url('assets/EOS.jpg')"}, className='', children=[
+app.layout = html.Div(id='layout', style={"background-image": "url('assets/EOSpic.jpg')"}, className='', children=[
     
     html.H1(id='title', children='Mission Control'),
     html.Div(id='subtitle', children='''Dashboard for Edge of Space Colorado Springs 2021'''),
