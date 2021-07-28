@@ -14,6 +14,7 @@
     * Trace data in real-time
     * Add labels for key points
     * Refactor default graphs
+    * Center dashboard; improve readability of title
 
 """
 # Run this app with `python dashboard.py` and
