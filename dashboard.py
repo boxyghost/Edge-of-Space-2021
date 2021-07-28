@@ -15,9 +15,6 @@
     * Add labels for key points
 
 """
-
-# -*- coding: utf-8 -*-
-
 # Run this app with `python dashboard.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 
