@@ -1,18 +1,19 @@
 """
 @breif Software for displaying all collected data from EOSS flight in one dashboard
 
-@author Demeaus Wong <------ (Please add your name here if you work on this file!)
+@author Demeaus Wong, Noah Kuzma
 @python version 3.8.2
 @date 7/20/21
 @bugs None yet!
 
 @TODO create basic dashboard, read in csv data files, display sensor data in charts, create 3D representation of flight data, display video
-    * Dropdown allows you to select data to compare
+    * Dropdowns need to change both y-axis to match the corresponding data
     * Slider controls vertical line along graphs
         * Show all data, If marker is after the slider value, reduce opacity and highlight with a line https://plotly.com/python/horizontal-vertical-shapes/
     * Incorporate GPS
     * Trace data in real-time
     * Add labels for key points
+    * Refactor default graphs
 
 """
 # Run this app with `python dashboard.py` and
@@ -21,7 +22,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output, MATCH, ALL
+from dash.dependencies import Input, Output, MATCH
 
 # import plotly.express as px
 # import plotly.graph_objects as go
@@ -47,6 +48,7 @@ def parse_timestamp(timestamp):
         timestamp_list.append(e)
     return datetime.datetime(int(timestamp_list[0]), int(timestamp_list[1]), int(timestamp_list[2]), int(timestamp_list[3]), int(timestamp_list[4]), int(timestamp_list[5]))
 
+# 'Constructor' for a dropdown component
 def make_dropdown_left (idx):
     drop = html.Div(
         children=[dcc.Dropdown(
@@ -59,6 +61,7 @@ def make_dropdown_left (idx):
     )
     return drop
 
+# 'Constructor' for a dropdown component
 def make_dropdown_right (idx):
     drop = html.Div(
         children=[dcc.Dropdown(
@@ -71,20 +74,28 @@ def make_dropdown_right (idx):
     )
     return drop
 
+# TODO: Should this be calibrated or something?
 # Input: Data column
 # Output: Fitted continuous y-values
-# def curve_fitting(column):
+def get_fitted_curve (column):
+    # Discrete y
+    y = df[column]
 
-#     return 
+    # Fit a line to discrete x and y
+    z = np.polyfit(x_num, y, 3)
+    f = np.poly1d(z)
+
+    # 'Continuous' y
+    yy = f(xx)
+    return yy
 
 ############## Main ##############
 serial = 0 # For giving each pair of dropdowns a unique index
 
 # Read data
 df = pd.read_csv("Test_Data/dummy.csv")
-
 headers = list(df.columns.values)
-headers.pop(0) # Removes TimeStamp left_data
+headers.pop(0) # Removes TimeStamp column
 
 # Preparing values for the dropdown based on data in the csv
 options = []
@@ -96,49 +107,31 @@ for header in headers:
     options.append(item)
 
 # Stylesheets in assets folder are automatically linked
-
+# Formatting for the graphs
 margin=dict(l=50, r=0, t=50, b=30)
 
 # x-axis of timestamps of datetime type
 df['TimeStamp'] = df['TimeStamp'].apply(lambda row : parse_timestamp(row))
-
-# 
 x_time = df['TimeStamp']
+x_time_labels = (x_time.astype({'TimeStamp': str})).to_dict()
 
 # Discrete x needs to be a certain type for curve-fitting
 x_num = mdates.date2num(x_time)
-
-x_time_labels = (x_time.astype({'TimeStamp': str})).to_dict()
-
-# Initial curve-fitting
-# Default Data 1: Temperature
-# Discrete y
-y_temperature = df[headers[0]]
-
-# Fit a line to discrete x and y
-z_temperature = np.polyfit(x_num, y_temperature, 3)
-f_temperature = np.poly1d(z_temperature)
 
 # 'Continuous' x
 xx = np.linspace(x_num.min(), x_num.max(), 100)
 xx_date = mdates.num2date(xx)
 
-# 'Continuous' y
-yy_temperature = f_temperature(xx)
-
-# Default Data 2: Humidity
-# Discrete y
-y_humidity = df[headers[1]]
-
-# Fit a line to discrete x and y
-z_humidity = np.polyfit(x_num, y_humidity, 3)
-f_humidity = np.poly1d(z_humidity)
+# Initial curve-fitting
+y_default_1 = df[headers[0]] # Discrete
+yy_default_1 = get_fitted_curve(headers[0]) # Continuous
 
 # 'Continuous' y
-yy_humidity = f_humidity(xx)
+y_default_2 = df[headers[1]] # Discrete
+yy_default_2 = get_fitted_curve(headers[1]) # Continuous
 
 #######################################
-
+# TODO: Implement automated slider
 # Example of autoplay
 # # Example data (a circle).
 # resolution = 20
@@ -162,16 +155,16 @@ base_graphs = [
             data=[
                 dict(
                     x=xx_date,
-                    y=yy_temperature,
-                    name='Fitted Temperature',
+                    y=yy_default_1,
+                    name='Fitted ' + headers[0],
                     marker=dict(
                         color='rgb(25, 103, 109)'
                     )
                 ), 
                 dict(
                     x=x_time,
-                    y=y_temperature,
-                    name='Actual Temperature',
+                    y=y_default_1,
+                    name='Actual ' + headers[0],
                     marker=dict(
                         color='rgb(25, 103, 109)'
                     ),
@@ -179,16 +172,16 @@ base_graphs = [
                 ),
                 dict(
                     x=xx_date,
-                    y=yy_humidity,
-                    name='Fitted Humidity',
+                    y=yy_default_2,
+                    name='Fitted ' + headers[1],
                     marker=dict(
                         color='rgb(25, 103, 109)'
                     )
                 ), 
                 dict(
                     x=x_time,
-                    y=y_humidity,
-                    name='Actual Humidity',
+                    y=y_default_2,
+                    name='Actual ' + headers[1],
                     marker=dict(
                         color='rgb(25, 103, 109)'
                     ),
@@ -213,16 +206,16 @@ base_graphs = [
             data=[
                 dict(
                     x=xx_date,
-                    y=yy_temperature,
-                    name='Fitted Temperature',
+                    y=yy_default_1,
+                    name='Fitted ' + headers[0],
                     marker=dict(
                         color='rgb(25, 103, 109)'
                     )
                 ), 
                 dict(
                     x=x_time,
-                    y=y_temperature,
-                    name='Actual Temperature',
+                    y=y_default_1,
+                    name='Actual ' + headers[0],
                     marker=dict(
                         color='rgb(25, 103, 109)'
                     ),
@@ -230,16 +223,16 @@ base_graphs = [
                 ),
                 dict(
                     x=xx_date,
-                    y=yy_humidity,
-                    name='Fitted Humidity',
+                    y=yy_default_2,
+                    name='Fitted ' + headers[1],
                     marker=dict(
                         color='rgb(25, 103, 109)'
                     )
                 ), 
                 dict(
                     x=x_time,
-                    y=y_humidity,
-                    name='Actual Humidity',
+                    y=y_default_2,
+                    name='Actual ' + headers[1],
                     marker=dict(
                         color='rgb(25, 103, 109)'
                     ),
@@ -264,16 +257,16 @@ base_graphs = [
             data=[
                 dict(
                     x=xx_date,
-                    y=yy_temperature,
-                    name='Fitted Temperature',
+                    y=yy_default_1,
+                    name='Fitted ' + headers[0],
                     marker=dict(
                         color='rgb(25, 103, 109)'
                     )
                 ), 
                 dict(
                     x=x_time,
-                    y=y_temperature,
-                    name='Actual Temperature',
+                    y=y_default_1,
+                    name='Actual ' + headers[0],
                     marker=dict(
                         color='rgb(25, 103, 109)'
                     ),
@@ -281,16 +274,16 @@ base_graphs = [
                 ),
                 dict(
                     x=xx_date,
-                    y=yy_humidity,
-                    name='Fitted Humidity',
+                    y=yy_default_2,
+                    name='Fitted ' + headers[1],
                     marker=dict(
                         color='rgb(25, 103, 109)'
                     )
                 ), 
                 dict(
                     x=x_time,
-                    y=y_humidity,
-                    name='Actual Humidity',
+                    y=y_default_2,
+                    name='Actual ' + headers[1],
                     marker=dict(
                         color='rgb(25, 103, 109)'
                     ),
@@ -348,7 +341,6 @@ slider = dcc.Slider(
 # Populate dashboard
 # TODO: Make dashboard responsive. See style.css and container class
 app.layout = html.Div(id='layout', style={"background-image": "url('assets/EOS.jpg')"}, className='', children=[
-    
     html.H1(id='title', children='Mission Control'),
     html.Div(id='subtitle', children='''Dashboard for Edge of Space Colorado Springs 2021'''),
 
@@ -361,8 +353,6 @@ app.layout = html.Div(id='layout', style={"background-image": "url('assets/EOS.j
         html.Div(className='one-third column module', children=[html.Iframe(src="https://www.youtube.com/embed/ieX1vjXe5JE", className='video')])]
     ),
 
-    # html.Div(id='test-output', children=[]),
-
     # Graphs
     html.Div(id='row-2', className='row', children=[
         html.Div(id='graphs-output')]
@@ -372,41 +362,28 @@ app.layout = html.Div(id='layout', style={"background-image": "url('assets/EOS.j
     html.Div(children=[slider])
 ])
 
-# For updating graphs with left dropdowns
-# TODO: Only affect one part of the graphs data; the 'left side'
+# For updating graphs with based on selected data from dropdowns
 @app.callback(
     Output({'type': 'dynamic-graphs', 'index': MATCH}, 'figure'),
     [Input({'type': 'left-dropdowns', 'index': MATCH}, 'value')],
     [Input({'type': 'right-dropdowns', 'index': MATCH}, 'value')],
     # prevent_initial_callback=True
 )
-def update_left_y(left_data, right_data):
+def update_y(left_data, right_data):
     if left_data == None:
         left_data =headers[0]
     if right_data == None:
-        right_data =headers[0]
+        right_data =headers[1]
 
     # Curve-fitting for the selected left_data and right_data from dropdowns
     # Discrete y
     y_left = df[left_data]
-
-    # Fit a line to discrete x and y
-    z_left = np.polyfit(x_num, y_left, 3)
-    f_left = np.poly1d(z_left)
-
-    # 'Continuous' y
-    yy_left = f_left(xx)
+    yy_left = get_fitted_curve(left_data)
 
     # Default Data 2: Humidity
     # Discrete y
     y_right = df[right_data]
-
-    # Fit a line to discrete x and y
-    z_right = np.polyfit(x_num, y_right, 3)
-    f_right = np.poly1d(z_right)
-
-    # 'Continuous' y
-    yy_right = f_right(xx)
+    yy_right = get_fitted_curve(right_data)
 
     mod_figure=dict(
                 data=[
@@ -482,7 +459,7 @@ def update_graphs(idx):
                 data=[
                     dict(
                         x=xx_date,
-                        y=yy_temperature,
+                        y=yy_default_1,
                         name='Fitted Temperature',
                         marker=dict(
                             color='rgb(25, 103, 109)'
@@ -490,7 +467,7 @@ def update_graphs(idx):
                     ), 
                     dict(
                         x=x_time,
-                        y=y_temperature,
+                        y=y_default_1,
                         name='Actual Temperature',
                         marker=dict(
                             color='rgb(25, 103, 109)'
@@ -499,7 +476,7 @@ def update_graphs(idx):
                     ),
                     dict(
                         x=xx_date,
-                        y=yy_humidity,
+                        y=yy_default_2,
                         name='Fitted Humidity',
                         marker=dict(
                             color='rgb(25, 103, 109)'
@@ -507,7 +484,7 @@ def update_graphs(idx):
                     ), 
                     dict(
                         x=x_time,
-                        y=y_humidity,
+                        y=y_default_1,
                         name='Actual Humidity',
                         marker=dict(
                             color='rgb(25, 103, 109)'
