@@ -25,7 +25,7 @@ from click import style
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, ALL
 from matplotlib.pyplot import legend
 from pandas.core.indexes import base
 
@@ -53,13 +53,46 @@ def parse_timestamp(timestamp):
         timestamp_list.append(e)
     return datetime.datetime(int(timestamp_list[0]), int(timestamp_list[1]), int(timestamp_list[2]), int(timestamp_list[3]), int(timestamp_list[4]), int(timestamp_list[5]))
 
+def make_dropdown_left (idx):
+    drop = html.Div(
+        children=[dcc.Dropdown(
+            id={'type': 'dropdowns','index': idx},
+            options=options,
+            placeholder="Select a dataset"
+        )],
+        className='dropdown',
+        style={'float':'left'}
+    )
+    return drop
+
+def make_dropdown_right (idx):
+    drop = html.Div(
+        children=[dcc.Dropdown(
+            id={'type': 'dropdowns','index': idx + 1},
+            options=options,
+            placeholder="Select a dataset"
+        )],
+        className='dropdown',
+        style={'float':'right'}
+    )
+    return drop
 ############## Main ##############
+serial = 1
 
 # Read data
 df = pd.read_csv("Test_Data/dummy.csv")
 
 headers = list(df.columns.values)
 headers.pop(0) # Removes TimeStamp column
+
+# Preparing values for the dropdown based on data in the csv
+options = []
+for header in headers:
+    item = dict(
+        label=header,
+        value=header,
+    )
+    options.append(item)
 
 # Stylesheets in assets folder are automatically linked
 
@@ -73,7 +106,6 @@ x_time = df['TimeStamp']
 
 # Discrete x needs to be a certain type for curve-fitting
 x_num = mdates.date2num(x_time)
-
 
 x_time_labels = (x_time.astype({'TimeStamp': str})).to_dict()
 
@@ -121,35 +153,6 @@ yy_humidity = f_humidity(xx)
 
 # Start dashboard
 app = dash.Dash(__name__)
-
-# Preparing values for the dropdown based on data in the csv
-options = []
-for header in headers:
-    item = dict(
-        label=header,
-        value=header,
-    )
-    options.append(item)
-
-dropdown_left = html.Div(
-    children=[dcc.Dropdown(
-        id='dropdown-left',
-        options=options,
-        placeholder="Select a dataset"
-    )],
-    className='dropdown',
-    style={'float':'left'}
-)
-
-dropdown_right = html.Div(
-    children=[dcc.Dropdown(
-        id='dropdown-right',
-        options=options,
-        placeholder="Select a dataset"
-    )],
-    className='dropdown',
-    style={'float':'right'}
-)
 
 # Initialize graphs as simply data in dictionary form, not as dash core components
 base_graphs = [
@@ -307,9 +310,6 @@ base_graphs = [
         )
 ]
 
-
-
-
 # List to hold objects ready to be added to the dashboard
 base_objects = []
 
@@ -319,8 +319,8 @@ for fig in base_graphs:
     base_objects.append(
         html.Div(id='div-graph-' + str(i), className="one-third column module", children=[
             html.Div(className='dropdowns', children=[
-                dropdown_left,
-                dropdown_right
+                make_dropdown_left(serial),
+                make_dropdown_right(serial)
             ]),
             dcc.Graph(
                 figure=fig,
@@ -328,7 +328,8 @@ for fig in base_graphs:
             ]
         )
     )
-    i = i + 1
+    serial += 1
+    i += 1
 
 # Time Control Slider
 slider = dcc.Slider(
@@ -340,8 +341,6 @@ slider = dcc.Slider(
         marks=x_time_labels, 
         step=None,
     )
-
-
 
 # Populate dashboard
 # TODO: Make dashboard responsive. See style.css and container class
@@ -359,9 +358,7 @@ app.layout = html.Div(id='layout', style={"background-image": "url('assets/EOS.j
         html.Div(className='one-third column module', children=[html.Iframe(src="https://www.youtube.com/embed/ieX1vjXe5JE", className='video')])]
     ),
 
-    # html.Div(id='div-dropdown', children=[
-    #     dropdown
-    # ]),
+    html.Div(id='test-output', children=[]),
 
     # Graphs
     html.Div(id='row-2', className='row', children=[
@@ -373,9 +370,17 @@ app.layout = html.Div(id='layout', style={"background-image": "url('assets/EOS.j
 ])
 
 @app.callback(
+    Output('test-output', 'children'),
+    Input({'type': 'dropdowns', 'index': ALL}, 'value')
+)
+def update_dropdown(option):
+    return option
+
+@app.callback(
     Output('graphs-output', 'children'),
     [Input('time-slider', 'value')]
 )
+
 # Dash calls this function internally to update the the callback graphs-output children when the time-slider value changes
 # idx is the value of the time slider
 def update_figure(idx):
