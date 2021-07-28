@@ -21,13 +21,10 @@
 # Run this app with `python dashboard.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 
-from click import style
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, MATCH, ALL
-from matplotlib.pyplot import legend
-from pandas.core.indexes import base
 
 # import plotly.express as px
 # import plotly.graph_objects as go
@@ -56,7 +53,7 @@ def parse_timestamp(timestamp):
 def make_dropdown_left (idx):
     drop = html.Div(
         children=[dcc.Dropdown(
-            id={'type': 'dropdowns','index': idx},
+            id={'type': 'left-dropdowns','index': idx},
             options=options,
             placeholder="Select a dataset"
         )],
@@ -68,7 +65,7 @@ def make_dropdown_left (idx):
 def make_dropdown_right (idx):
     drop = html.Div(
         children=[dcc.Dropdown(
-            id={'type': 'dropdowns','index': idx},
+            id={'type': 'right-dropdowns','index': idx},
             options=options,
             placeholder="Select a dataset"
         )],
@@ -77,15 +74,20 @@ def make_dropdown_right (idx):
     )
     return drop
 
-############## Main ##############
+# Input: Data column
+# Output: Fitted continuous y-values
+# def curve_fitting(column):
 
-serial = 0 # For giving each dropdown a unique index
+#     return 
+
+############## Main ##############
+serial = 0 # For giving each pair of dropdowns a unique index
 
 # Read data
 df = pd.read_csv("Test_Data/dummy.csv")
 
 headers = list(df.columns.values)
-headers.pop(0) # Removes TimeStamp column
+headers.pop(0) # Removes TimeStamp left_data
 
 # Preparing values for the dropdown based on data in the csv
 options = []
@@ -114,7 +116,7 @@ x_time_labels = (x_time.astype({'TimeStamp': str})).to_dict()
 # Initial curve-fitting
 # Default Data 1: Temperature
 # Discrete y
-y_temperature = df['Temperature']
+y_temperature = df[headers[0]]
 
 # Fit a line to discrete x and y
 z_temperature = np.polyfit(x_num, y_temperature, 3)
@@ -129,7 +131,7 @@ yy_temperature = f_temperature(xx)
 
 # Default Data 2: Humidity
 # Discrete y
-y_humidity = df['Humidity']
+y_humidity = df[headers[1]]
 
 # Fit a line to discrete x and y
 z_humidity = np.polyfit(x_num, y_humidity, 3)
@@ -323,7 +325,7 @@ for fig in base_graphs:
             className="one-third column module", children=[
             html.Div(className='dropdowns', children=[
                 make_dropdown_left(serial),
-                make_dropdown_right(serial + 1)
+                make_dropdown_right(serial)
             ]),
             dcc.Graph(
                 figure=fig,
@@ -332,7 +334,7 @@ for fig in base_graphs:
             ]
         )
     )
-    serial += 2
+    serial += 1
     i += 1
 
 # Time Control Slider
@@ -362,7 +364,7 @@ app.layout = html.Div(id='layout', style={"background-image": "url('assets/EOS.j
         html.Div(className='one-third column module', children=[html.Iframe(src="https://www.youtube.com/embed/ieX1vjXe5JE", className='video')])]
     ),
 
-    html.Div(id='test-output', children=[]),
+    # html.Div(id='test-output', children=[]),
 
     # Graphs
     html.Div(id='row-2', className='row', children=[
@@ -373,48 +375,56 @@ app.layout = html.Div(id='layout', style={"background-image": "url('assets/EOS.j
     html.Div(children=[slider])
 ])
 
+# For updating graphs with left dropdowns
+# TODO: Only affect one part of the graphs data; the 'left side'
 @app.callback(
     Output({'type': 'dynamic-graphs', 'index': MATCH}, 'figure'),
-    [Input({'type': 'dropdowns', 'index': MATCH}, 'value')],
-    prevent_initial_callback=True
+    [Input({'type': 'left-dropdowns', 'index': MATCH}, 'value')],
+    [Input({'type': 'right-dropdowns', 'index': MATCH}, 'value')],
+    # prevent_initial_callback=True
 )
-def update_y(column):
-    # Curve-fitting for the selected column of data
+def update_left_y(left_data, right_data):
+    if left_data == None:
+        left_data =headers[0]
+    if right_data == None:
+        right_data =headers[0]
+
+    # Curve-fitting for the selected left_data and right_data from dropdowns
     # Discrete y
-    y = df[column]
+    y_left = df[left_data]
 
     # Fit a line to discrete x and y
-    z = np.polyfit(x_num, y, 3)
-    f = np.poly1d(z)
+    z_left = np.polyfit(x_num, y_left, 3)
+    f_left = np.poly1d(z_left)
 
     # 'Continuous' y
-    yy = f(xx)
+    yy_left = f_left(xx)
 
     # Default Data 2: Humidity
     # Discrete y
-    y_humidity = df['Humidity']
+    y_right = df[right_data]
 
     # Fit a line to discrete x and y
-    z_humidity = np.polyfit(x_num, y_humidity, 3)
-    f_humidity = np.poly1d(z_humidity)
+    z_right = np.polyfit(x_num, y_right, 3)
+    f_right = np.poly1d(z_right)
 
     # 'Continuous' y
-    yy_humidity = f_humidity(xx)
+    yy_right = f_right(xx)
 
     mod_figure=dict(
                 data=[
                     dict(
                         x=xx_date,
-                        y=yy,
-                        name='Fitted ' + column,
+                        y=yy_left,
+                        name='Fitted ' + left_data,
                         marker=dict(
                             color='rgb(25, 103, 109)'
                         )
                     ), 
                     dict(
                         x=x_time,
-                        y=y,
-                        name='Actual '+ column,
+                        y=y_left,
+                        name='Actual '+ left_data,
                         marker=dict(
                             color='rgb(25, 103, 109)'
                         ),
@@ -422,16 +432,16 @@ def update_y(column):
                     ),
                     dict(
                         x=xx_date,
-                        y=yy_humidity,
-                        name='Fitted Humidity',
+                        y=yy_right,
+                        name='Fitted ' + right_data,
                         marker=dict(
                             color='rgb(25, 103, 109)'
                         )
                     ), 
                     dict(
                         x=x_time,
-                        y=y_humidity,
-                        name='Actual Humidity',
+                        y=y_right,
+                        name='Actual ' + right_data,
                         marker=dict(
                             color='rgb(25, 103, 109)'
                         ),
@@ -439,7 +449,7 @@ def update_y(column):
                     )
                 ],
                 layout=dict(
-                    title= column + ' vs. ',
+                    title= left_data + ' vs. ' + right_data,
                     margin=margin,
                     legend=dict(
                         orientation="h"
@@ -450,7 +460,6 @@ def update_y(column):
                 )
             )
     return mod_figure
-
 
 @app.callback(
     Output('graphs-output', 'children'),
