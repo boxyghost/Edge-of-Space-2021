@@ -374,12 +374,82 @@ app.layout = html.Div(id='layout', style={"background-image": "url('assets/EOS.j
 ])
 
 @app.callback(
-    Output({'type': 'dynamic-graphs', 'index': MATCH}, 'className'),
+    Output({'type': 'dynamic-graphs', 'index': MATCH}, 'figure'),
     [Input({'type': 'dropdowns', 'index': MATCH}, 'value')],
     prevent_initial_callback=True
 )
-def update_y(val):
-    return val
+def update_y(column):
+    # Curve-fitting for the selected column of data
+    # Discrete y
+    y = df[column]
+
+    # Fit a line to discrete x and y
+    z = np.polyfit(x_num, y, 3)
+    f = np.poly1d(z)
+
+    # 'Continuous' y
+    yy = f(xx)
+
+    # Default Data 2: Humidity
+    # Discrete y
+    y_humidity = df['Humidity']
+
+    # Fit a line to discrete x and y
+    z_humidity = np.polyfit(x_num, y_humidity, 3)
+    f_humidity = np.poly1d(z_humidity)
+
+    # 'Continuous' y
+    yy_humidity = f_humidity(xx)
+
+    mod_figure=dict(
+                data=[
+                    dict(
+                        x=xx_date,
+                        y=yy,
+                        name='Fitted ' + column,
+                        marker=dict(
+                            color='rgb(25, 103, 109)'
+                        )
+                    ), 
+                    dict(
+                        x=x_time,
+                        y=y,
+                        name='Actual '+ column,
+                        marker=dict(
+                            color='rgb(25, 103, 109)'
+                        ),
+                        mode='markers'
+                    ),
+                    dict(
+                        x=xx_date,
+                        y=yy_humidity,
+                        name='Fitted Humidity',
+                        marker=dict(
+                            color='rgb(25, 103, 109)'
+                        )
+                    ), 
+                    dict(
+                        x=x_time,
+                        y=y_humidity,
+                        name='Actual Humidity',
+                        marker=dict(
+                            color='rgb(25, 103, 109)'
+                        ),
+                        mode='markers'
+                    )
+                ],
+                layout=dict(
+                    title= column + ' vs. ',
+                    margin=margin,
+                    legend=dict(
+                        orientation="h"
+                    ),
+                    xaxis=dict(
+                        range=[x_time.min() - datetime.timedelta(minutes=10), x_time.max() + datetime.timedelta(minutes=10)]
+                    )
+                )
+            )
+    return mod_figure
 
 
 @app.callback(
