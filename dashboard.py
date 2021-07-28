@@ -8,7 +8,7 @@
 
 @TODO create basic dashboard, read in csv data files, display sensor data in charts, create 3D representation of flight data, display video
     * Dropdowns need to change both y-axis to match the corresponding data
-    * Slider controls vertical line along graphs
+    * Slider controls vertical line along graphs and sync with videos
         * Show all data, If marker is after the slider value, reduce opacity and highlight with a line https://plotly.com/python/horizontal-vertical-shapes/
     * Incorporate GPS
     * Trace data in real-time
@@ -25,12 +25,9 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, MATCH
 
-# import plotly.express as px
-# import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 import matplotlib.dates as mdates
-
 import datetime
 
 ############# Helpers #############
@@ -91,7 +88,7 @@ def get_fitted_curve (column):
     return yy
 
 ############## Main ##############
-serial = 0 # For giving each pair of dropdowns a unique index
+ROW_SIZE = 3 # Number of modules per row; TODO: Make app dynamic and remove
 
 # Read data
 df = pd.read_csv("Test_Data/dummy.csv")
@@ -143,190 +140,30 @@ yy_default_2 = get_fitted_curve(headers[1]) # Continuous
 # figure = dict(data=[{'x': [], 'y': []}], layout=dict(xaxis=dict(range=[-1, 1]), yaxis=dict(range=[-1, 1])))
 # app = dash.Dash(__name__, update_title=None)  # remove "Updating..." from title
 # app.layout = html.Div([dcc.Graph(id='graph', figure=figure), dcc.Interval(id="interval")])
-
 ##########################
 
 # Start dashboard
 app = dash.Dash(__name__)
 
-# Initialize graphs as simply data in dictionary form, not as dash core components
-base_graphs = [
-    # Graph 1
-        dict(
-            data=[
-                dict(
-                    x=xx_date,
-                    y=yy_default_1,
-                    name='Fitted ' + headers[0],
-                    marker=dict(
-                        color='rgb(25, 103, 109)'
-                    )
-                ), 
-                dict(
-                    x=x_time,
-                    y=y_default_1,
-                    name='Actual ' + headers[0],
-                    marker=dict(
-                        color='rgb(25, 103, 109)'
-                    ),
-                    mode='markers'
-                ),
-                dict(
-                    x=xx_date,
-                    y=yy_default_2,
-                    name='Fitted ' + headers[1],
-                    marker=dict(
-                        color='rgb(25, 103, 109)'
-                    )
-                ), 
-                dict(
-                    x=x_time,
-                    y=y_default_2,
-                    name='Actual ' + headers[1],
-                    marker=dict(
-                        color='rgb(25, 103, 109)'
-                    ),
-                    mode='markers'
-                )
-
-            ],
-            layout=dict(
-                title='Test 1',
-                margin=margin,
-                legend=dict(
-                    orientation="h"
-                ),
-                xaxis=dict(
-                    range=[x_time.min() - datetime.timedelta(minutes=10), x_time.max() + datetime.timedelta(minutes=10)]
-                )
-            )
-        ),
-
-    # Graph 2
-    dict(
-            data=[
-                dict(
-                    x=xx_date,
-                    y=yy_default_1,
-                    name='Fitted ' + headers[0],
-                    marker=dict(
-                        color='rgb(25, 103, 109)'
-                    )
-                ), 
-                dict(
-                    x=x_time,
-                    y=y_default_1,
-                    name='Actual ' + headers[0],
-                    marker=dict(
-                        color='rgb(25, 103, 109)'
-                    ),
-                    mode='markers'
-                ),
-                dict(
-                    x=xx_date,
-                    y=yy_default_2,
-                    name='Fitted ' + headers[1],
-                    marker=dict(
-                        color='rgb(25, 103, 109)'
-                    )
-                ), 
-                dict(
-                    x=x_time,
-                    y=y_default_2,
-                    name='Actual ' + headers[1],
-                    marker=dict(
-                        color='rgb(25, 103, 109)'
-                    ),
-                    mode='markers'
-                )
-
-            ],
-            layout=dict(
-                title='Test 2',
-                margin=margin,
-                legend=dict(
-                    orientation="h"
-                ),
-                xaxis=dict(
-                    range=[x_time.min() - datetime.timedelta(minutes=10), x_time.max() + datetime.timedelta(minutes=10)]
-                )
-            )
-        ),
-
-    # Graph 3
-    dict(
-            data=[
-                dict(
-                    x=xx_date,
-                    y=yy_default_1,
-                    name='Fitted ' + headers[0],
-                    marker=dict(
-                        color='rgb(25, 103, 109)'
-                    )
-                ), 
-                dict(
-                    x=x_time,
-                    y=y_default_1,
-                    name='Actual ' + headers[0],
-                    marker=dict(
-                        color='rgb(25, 103, 109)'
-                    ),
-                    mode='markers'
-                ),
-                dict(
-                    x=xx_date,
-                    y=yy_default_2,
-                    name='Fitted ' + headers[1],
-                    marker=dict(
-                        color='rgb(25, 103, 109)'
-                    )
-                ), 
-                dict(
-                    x=x_time,
-                    y=y_default_2,
-                    name='Actual ' + headers[1],
-                    marker=dict(
-                        color='rgb(25, 103, 109)'
-                    ),
-                    mode='markers'
-                )
-
-            ],
-            layout=dict(
-                title='Test 3',
-                margin=margin,
-                legend=dict(
-                    orientation="h"
-                ),
-                xaxis=dict(
-                    range=[x_time.min() - datetime.timedelta(minutes=10), x_time.max() + datetime.timedelta(minutes=10)]
-                )
-            )
-        )
-]
-
 # List to hold objects ready to be added to the dashboard
 base_objects = []
 
 # Wrap graph data in dash core component wrapper and add to list of objects (base_objects)
-i = 0
-for fig in base_graphs:
+for i in range(ROW_SIZE):
     base_objects.append(
         html.Div(
             className="one-third column module", children=[
             html.Div(className='dropdowns', children=[
-                make_dropdown_left(serial),
-                make_dropdown_right(serial)
+                # Each pair of dropdowns has an index
+                make_dropdown_left(i),
+                make_dropdown_right(i)
             ]),
             dcc.Graph(
-                figure=fig,
                 id={'type': 'dynamic-graphs', 'index': i} 
                 )
             ]
         )
     )
-    serial += 1
-    i += 1
 
 # Time Control Slider
 slider = dcc.Slider(
@@ -377,12 +214,9 @@ def update_y(left_data, right_data):
         right_data =headers[1]
 
     # Curve-fitting for the selected left_data and right_data from dropdowns
-    # Discrete y
     y_left = df[left_data]
     yy_left = get_fitted_curve(left_data)
 
-    # Default Data 2: Humidity
-    # Discrete y
     y_right = df[right_data]
     yy_right = get_fitted_curve(right_data)
 
@@ -438,9 +272,11 @@ def update_y(left_data, right_data):
 
 @app.callback(
     Output('graphs-output', 'children'),
-    [Input('time-slider', 'value')]
+    [Input('time-slider', 'value')],
+    # prevent_initial_callbacks=True
 )
-# Dash calls this function internally to update the the callback graphs-output children when the time-slider value changes
+# Dash calls this function internally to update the graphs when the time-slider value changes
+# Adds a vertical line that traces the graph, append to data?
 # idx is the value of the time slider
 def update_graphs(idx):
     if idx is None:
@@ -448,61 +284,9 @@ def update_graphs(idx):
     else:
         mod_graphs = []
         # filter_x = x_time.head(idx)
-        # TODO: Change this from a for-loop to be dependent dropdowns
-        # TODO: Display two y-axis for each selected dataset
-        for fig in base_graphs:
-            # figure_name = fig['data'][0]['y'].name
-            # Create new filter_y values
-            # filter_y = df[figure_name].head(idx)
+        for i in range(ROW_SIZE):
+            mod_figure = dict(
 
-            # Create a new figure with modified x and y
-            mod_figure=dict(
-                data=[
-                    dict(
-                        x=xx_date,
-                        y=yy_default_1,
-                        name='Fitted Temperature',
-                        marker=dict(
-                            color='rgb(25, 103, 109)'
-                        )
-                    ), 
-                    dict(
-                        x=x_time,
-                        y=y_default_1,
-                        name='Actual Temperature',
-                        marker=dict(
-                            color='rgb(25, 103, 109)'
-                        ),
-                        mode='markers'
-                    ),
-                    dict(
-                        x=xx_date,
-                        y=yy_default_2,
-                        name='Fitted Humidity',
-                        marker=dict(
-                            color='rgb(25, 103, 109)'
-                        )
-                    ), 
-                    dict(
-                        x=x_time,
-                        y=y_default_1,
-                        name='Actual Humidity',
-                        marker=dict(
-                            color='rgb(25, 103, 109)'
-                        ),
-                        mode='markers'
-                    )
-                ],
-                layout=dict(
-                    title=str(idx),
-                    margin=margin,
-                    legend=dict(
-                        orientation="h"
-                    ),
-                    xaxis=dict(
-                        range=[x_time.min() - datetime.timedelta(minutes=10), x_time.max() + datetime.timedelta(minutes=10)]
-                    )
-                )
             )
             mod_graphs.append(mod_figure)
 
@@ -513,10 +297,16 @@ def update_graphs(idx):
             mod_objects.append(
                 html.Div(
                     className="one-third column module", children=[
+                    html.Div(className='dropdowns', children=[
+                        # Each pair of dropdowns has an index
+                        make_dropdown_left(i),
+                        make_dropdown_right(i)
+                    ]),
                     dcc.Graph(
                         figure=fig,
-                        id={'type': 'dynamic-graphs', 'index': i},
-                    )]
+                        id={'type': 'dynamic-graphs', 'index': i} 
+                        )
+                    ]
                 )
             )
             i = i + 1
