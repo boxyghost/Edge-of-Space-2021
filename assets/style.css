@@ -44,7 +44,7 @@ Table of contents
 }
 
 #time-slider {
-  margin-top: 125px;
+  margin-top: 9%;
   display: block;
   width: 75%;
   margin-left: auto;
@@ -56,6 +56,14 @@ Table of contents
 .video {
   height: 100%;
   width: 100%;
+}
+
+.dropdowns {
+  height: 12%;
+}
+
+.dropdown {
+  width: 50%;
 }
 
 /* Grid

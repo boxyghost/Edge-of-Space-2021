@@ -21,6 +21,7 @@
 # Run this app with `python dashboard.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 
+from click import style
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -120,6 +121,35 @@ yy_humidity = f_humidity(xx)
 
 # Start dashboard
 app = dash.Dash(__name__)
+
+# Preparing values for the dropdown based on data in the csv
+options = []
+for header in headers:
+    item = dict(
+        label=header,
+        value=header,
+    )
+    options.append(item)
+
+dropdown_left = html.Div(
+    children=[dcc.Dropdown(
+        id='dropdown-left',
+        options=options,
+        placeholder="Select a dataset"
+    )],
+    className='dropdown',
+    style={'float':'left'}
+)
+
+dropdown_right = html.Div(
+    children=[dcc.Dropdown(
+        id='dropdown-right',
+        options=options,
+        placeholder="Select a dataset"
+    )],
+    className='dropdown',
+    style={'float':'right'}
+)
 
 # Initialize graphs as simply data in dictionary form, not as dash core components
 base_graphs = [
@@ -277,6 +307,9 @@ base_graphs = [
         )
 ]
 
+
+
+
 # List to hold objects ready to be added to the dashboard
 base_objects = []
 
@@ -285,6 +318,10 @@ i = 0
 for fig in base_graphs:
     base_objects.append(
         html.Div(id='div-graph-' + str(i), className="one-third column module", children=[
+            html.Div(className='dropdowns', children=[
+                dropdown_left,
+                dropdown_right
+            ]),
             dcc.Graph(
                 figure=fig,
                 id='graph-' + str(i))
@@ -304,20 +341,7 @@ slider = dcc.Slider(
         step=None,
     )
 
-# Preparing values for the dropdown based on data in the csv
-options = []
-for header in headers:
-    item = dict(
-        label=header,
-        value=header,
-    )
-    options.append(item)
 
-dropdown = dcc.Dropdown(
-    id='dropdown-1',
-    options=options,
-    placeholder="Select a dataset"
-)
 
 # Populate dashboard
 # TODO: Make dashboard responsive. See style.css and container class
@@ -334,9 +358,9 @@ app.layout = html.Div(id='layout', className='', children=[
         html.Div(className='one-third column module', children=[html.Iframe(src="https://www.youtube.com/embed/ieX1vjXe5JE", className='video')])]
     ),
 
-    html.Div(id='div-dropdown', children=[
-        dropdown
-    ]),
+    # html.Div(id='div-dropdown', children=[
+    #     dropdown
+    # ]),
 
     # Graphs
     html.Div(id='row-2', className='row', children=[
